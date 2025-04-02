@@ -67,16 +67,16 @@ graph LR
     PM -- "[4] take action" --> SH
     PM -- "[4] take action" --> H
 
-    style B fill:#90ee90,stroke:#333,stroke-width:2px
-    style C fill:#90ee90,stroke:#333,stroke-width:2px
-    style S fill:#f08080,stroke:#333,stroke-width:2px
-    style SH fill:#f08080,stroke:#333,stroke-width:2px
-    style H fill:#add8e6,stroke:#333,stroke-width:2px
-    style Agents fill:#ffe4b5,stroke:#333,stroke-width:2px
-    style RM fill:#ffe4b5,stroke:#333,stroke-width:2px
-    style PM fill:#ffe4b5,stroke:#333,stroke-width:2px
-    style Start fill:#d3d3d3,stroke:#333,stroke-width:2px
-    style TD fill:#d3d3d3,stroke:#333,stroke-width:1px,stroke-dasharray: 5 5
+    %% style B fill:#90ee90,stroke:#333,stroke-width:2px
+    %% style C fill:#90ee90,stroke:#333,stroke-width:2px
+    %% style S fill:#f08080,stroke:#333,stroke-width:2px
+    %% style SH fill:#f08080,stroke:#333,stroke-width:2px
+    %% style H fill:#add8e6,stroke:#333,stroke-width:2px
+    %% style Agents fill:#ffe4b5,stroke:#333,stroke-width:2px
+    %% style RM fill:#ffe4b5,stroke:#333,stroke-width:2px
+    %% style PM fill:#ffe4b5,stroke:#333,stroke-width:2px
+    %% style Start fill:#d3d3d3,stroke:#333,stroke-width:2px
+    %% style TD fill:#d3d3d3,stroke:#333,stroke-width:1px,stroke-dasharray: 5 5
 ```
 
 **Note**: the system simulates trading decisions, it does not actually trade.
