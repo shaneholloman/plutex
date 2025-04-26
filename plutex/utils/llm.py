@@ -15,13 +15,13 @@ from langchain_core.messages import AIMessage, BaseMessage
 from langchain_core.runnables import Runnable
 from pydantic import BaseModel
 
-from src.llm.models import (
+from plutex.llm.models import (
     ChatModelType,
     ModelProvider,
     get_model,
     get_model_info,
 )  # Import ModelProvider
-from src.utils.progress import progress
+from plutex.utils.progress import progress
 
 T = TypeVar("T", bound=BaseModel)
 

@@ -1,9 +1,9 @@
 [project]
 name = "plutex"
-version = "0.1.0"
+version = "0.1.7"
 description = "plutex: An AI-powered trading system using multiple agents"
 authors = [{ name = "Shane Holloman", email = "shaneholloman@gmail.com" }]
-requires-python = "~=3.11"
+requires-python = ">=3.11"
 readme = "README.md"
 dependencies = [
   "langchain==0.3.0",
@@ -23,6 +23,9 @@ dependencies = [
   "langchain-google-genai>=2.0.11,<3"
 ]
 
+[project.scripts]
+plutex = "plutex.cli:main"
+
 [dependency-groups]
 dev = [
   "pytest",
@@ -37,13 +40,10 @@ dev = [
 ]
 
 [tool.hatch.build.targets.sdist]
-include = ["./src"]
+include = ["plutex"]
 
 [tool.hatch.build.targets.wheel]
-include = ["./src"]
-
-[tool.hatch.build.targets.wheel.sources]
-"./src" = "src"
+packages = ["plutex"]
 
 [build-system]
 requires = ["hatchling"]
@@ -55,7 +55,7 @@ target-version = ['py311']
 include = '\.pyi?$'
 
 [tool.mypy]
-mypy_path = "src"
+mypy_path = "plutex"
 # Help mypy find types for installed packages
 follow_imports = "normal"
 # Add packages known to have type hints but potentially missed

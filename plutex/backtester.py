@@ -11,17 +11,17 @@ from colorama import Fore, Style, init
 from dateutil.relativedelta import relativedelta
 from typing_extensions import Callable
 
-from src.llm.models import LLM_ORDER, get_model_info
-from src.main import run_plutex
-from src.tools.api import (
+from plutex.llm.models import LLM_ORDER, get_model_info
+from plutex.main import run_plutex
+from plutex.tools.api import (
     get_company_news,
     get_financial_metrics,
     get_insider_trades,
     get_price_data,
     get_prices,
 )
-from src.utils.analysts import ANALYST_ORDER
-from src.utils.display import format_backtest_row, print_backtest_results
+from plutex.utils.analysts import ANALYST_ORDER
+from plutex.utils.display import format_backtest_row, print_backtest_results
 
 init(autoreset=True)
 

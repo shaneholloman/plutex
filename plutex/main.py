@@ -10,14 +10,14 @@ from dotenv import load_dotenv
 from langchain_core.messages import HumanMessage
 from langgraph.graph import END, StateGraph
 
-from src.agents.portfolio_manager import portfolio_management_agent
-from src.agents.risk_manager import risk_management_agent
-from src.graph.state import AgentState
-from src.llm.models import LLM_ORDER, get_model_info
-from src.utils.analysts import ANALYST_ORDER, get_analyst_nodes
-from src.utils.display import print_trading_output
-from src.utils.progress import progress
-from src.utils.visualize import save_graph_as_png
+from plutex.agents.portfolio_manager import portfolio_management_agent
+from plutex.agents.risk_manager import risk_management_agent
+from plutex.graph.state import AgentState
+from plutex.llm.models import LLM_ORDER, get_model_info
+from plutex.utils.analysts import ANALYST_ORDER, get_analyst_nodes
+from plutex.utils.display import print_trading_output
+from plutex.utils.progress import progress
+from plutex.utils.visualize import save_graph_as_png
 
 # Load environment variables from .env file
 load_dotenv()
@@ -59,12 +59,9 @@ def run_plutex(
     progress.start()
 
     try:
-        # Create a new workflow if analysts are customized
-        if selected_analysts:
-            workflow = create_workflow(selected_analysts)
-            agent = workflow.compile()
-        else:
-            agent = app
+        # Always create a new workflow with the selected analysts
+        workflow = create_workflow(selected_analysts)
+        agent = workflow.compile()
 
         final_state = agent.invoke(
             {
@@ -135,7 +132,8 @@ def create_workflow(selected_analysts=None):
     return workflow
 
 
-if __name__ == "__main__":
+def main():
+    """Main entry point for the plutex CLI application."""
     parser = argparse.ArgumentParser(description="Run the plutex trading system")
     parser.add_argument(
         "--initial-cash",
@@ -308,3 +306,7 @@ if __name__ == "__main__":
         model_provider=model_provider,
     )
     print_trading_output(result)
+
+
+if __name__ == "__main__":
+    main()

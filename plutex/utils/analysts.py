@@ -2,19 +2,19 @@
 
 from typing import Any, Dict, Tuple  # Import at the top
 
-from src.agents.ben_graham import ben_graham_agent
-from src.agents.bill_ackman import bill_ackman_agent
-from src.agents.cathie_wood import cathie_wood_agent
-from src.agents.charlie_munger import charlie_munger_agent
-from src.agents.fundamentals import fundamentals_agent
-from src.agents.michael_burry import michael_burry_agent
-from src.agents.peter_lynch import peter_lynch_agent
-from src.agents.phil_fisher import phil_fisher_agent
-from src.agents.sentiment import sentiment_agent
-from src.agents.stanley_druckenmiller import stanley_druckenmiller_agent
-from src.agents.technicals import technical_analyst_agent
-from src.agents.valuation import valuation_agent
-from src.agents.warren_buffett import warren_buffett_agent
+from plutex.agents.ben_graham import ben_graham_agent
+from plutex.agents.bill_ackman import bill_ackman_agent
+from plutex.agents.cathie_wood import cathie_wood_agent
+from plutex.agents.charlie_munger import charlie_munger_agent
+from plutex.agents.fundamentals import fundamentals_agent
+from plutex.agents.michael_burry import michael_burry_agent
+from plutex.agents.peter_lynch import peter_lynch_agent
+from plutex.agents.phil_fisher import phil_fisher_agent
+from plutex.agents.sentiment import sentiment_agent
+from plutex.agents.stanley_druckenmiller import stanley_druckenmiller_agent
+from plutex.agents.technicals import technical_analyst_agent
+from plutex.agents.valuation import valuation_agent
+from plutex.agents.warren_buffett import warren_buffett_agent
 
 # Define analyst configuration - single source of truth
 ANALYST_CONFIG = {

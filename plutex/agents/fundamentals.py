@@ -2,9 +2,9 @@ import json
 
 from langchain_core.messages import HumanMessage
 
-from src.graph.state import AgentState, show_agent_reasoning
-from src.tools.api import get_financial_metrics
-from src.utils.progress import progress
+from plutex.graph.state import AgentState, show_agent_reasoning
+from plutex.tools.api import get_financial_metrics
+from plutex.utils.progress import progress
 
 
 ##### Fundamental Agent #####

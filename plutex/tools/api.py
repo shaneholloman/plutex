@@ -5,8 +5,8 @@ from typing import Union
 import pandas as pd
 import requests
 
-from src.data.cache import get_cache
-from src.data.models import (
+from plutex.data.cache import get_cache
+from plutex.data.models import (
     CompanyNews,
     CompanyNewsResponse,
     FinancialMetrics,

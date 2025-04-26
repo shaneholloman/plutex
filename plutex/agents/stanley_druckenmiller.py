@@ -7,8 +7,8 @@ from langchain_core.prompts import ChatPromptTemplate
 from pydantic import BaseModel
 from typing_extensions import Literal
 
-from src.graph.state import AgentState, show_agent_reasoning
-from src.tools.api import (
+from plutex.graph.state import AgentState, show_agent_reasoning
+from plutex.tools.api import (
     get_company_news,
     get_financial_metrics,
     get_insider_trades,
@@ -16,8 +16,8 @@ from src.tools.api import (
     get_prices,
     search_line_items,
 )
-from src.utils.llm import call_llm
-from src.utils.progress import progress
+from plutex.utils.llm import call_llm
+from plutex.utils.progress import progress
 
 
 class StanleyDruckenmillerSignal(BaseModel):

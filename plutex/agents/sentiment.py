@@ -6,9 +6,9 @@ import numpy as np
 import pandas as pd
 from langchain_core.messages import HumanMessage
 
-from src.graph.state import AgentState, show_agent_reasoning
-from src.tools.api import get_company_news, get_insider_trades
-from src.utils.progress import progress
+from plutex.graph.state import AgentState, show_agent_reasoning
+from plutex.tools.api import get_company_news, get_insider_trades
+from plutex.utils.progress import progress
 
 
 ##### Sentiment Agent #####
