@@ -2,6 +2,8 @@ import argparse
 import json
 import sys
 from datetime import datetime
+from pathlib import Path
+from typing import Optional
 
 import questionary
 from colorama import Fore, Style, init
@@ -19,10 +21,48 @@ from plutex.utils.display import print_trading_output
 from plutex.utils.progress import progress
 from plutex.utils.visualize import save_graph_as_png
 
-# Load environment variables from .env file
-load_dotenv()
-
+# Colorama initialization
 init(autoreset=True)
+
+def load_environment_variables(env_file: Optional[str] = None) -> None:
+    """
+    Load environment variables from a .env file.
+    
+    Order of precedence:
+    1. Custom path specified via env_file parameter
+    2. User's home directory (~/.plutex)
+    3. Current working directory (.env)
+    
+    Args:
+        env_file: Optional path to a .env file. 
+                  If not provided, we'll check ~/.plutex then .env
+    
+    Returns:
+        None
+    """
+    # If a specific env file is provided, try to load it
+    if env_file:
+        env_path = Path(env_file)
+        if not env_path.exists():
+            print(f"{Fore.RED}Warning: Environment file {env_file} not found.{Style.RESET_ALL}")
+        else:
+            load_dotenv(dotenv_path=env_path)
+            print(f"{Fore.GREEN}Loaded environment variables from {env_file}{Style.RESET_ALL}")
+            return
+    
+    # Check for ~/.plutex file in user's home directory
+    home_env_path = Path.home() / ".plutex"
+    if home_env_path.exists():
+        load_dotenv(dotenv_path=home_env_path)
+        print(f"{Fore.GREEN}Loaded environment variables from {home_env_path}{Style.RESET_ALL}")
+        return
+    
+    # Finally, try the default .env file in current directory
+    if Path(".env").exists():
+        load_dotenv()
+        print(f"{Fore.GREEN}Loaded environment variables from .env{Style.RESET_ALL}")
+    else:
+        print(f"{Fore.YELLOW}No .env file found. Please set up environment variables.{Style.RESET_ALL}")
 
 
 def parse_plutex_response(response):
@@ -132,9 +172,20 @@ def create_workflow(selected_analysts=None):
     return workflow
 
 
-def main():
-    """Main entry point for the plutex CLI application."""
-    parser = argparse.ArgumentParser(description="Run the plutex trading system")
+def main() -> int:
+    """
+    Main entry point for the plutex CLI application.
+
+    Returns:
+        int: Exit code (0 for success, non-zero for errors)
+    """
+    parser = argparse.ArgumentParser(
+        description="Run the plutex trading system",
+        epilog=("Environment variables: plutex requires API keys for various services. "
+                "You can set these in: (1) a file specified with --env-file, "
+                "(2) ~/.plutex in your home directory, or "
+                "(3) .env in the current directory.")
+    )
     parser.add_argument(
         "--initial-cash",
         type=float,
@@ -167,8 +218,17 @@ def main():
     parser.add_argument(
         "--show-agent-graph", action="store_true", help="Show the agent graph"
     )
+    parser.add_argument(
+        "--env-file",
+        type=str,
+        help="Path to a custom .env file for loading environment variables. "
+             "If not specified, will check ~/.plutex then .env in the current directory",
+    )
 
     args = parser.parse_args()
+
+    # Load environment variables from specified file or default .env
+    load_environment_variables(args.env_file)
 
     # Parse tickers from comma-separated string
     tickers = [ticker.strip() for ticker in args.tickers.split(",")]
@@ -295,18 +355,23 @@ def main():
     }
 
     # Run plutex
-    result = run_plutex(
-        tickers=tickers,
-        start_date=start_date,
-        end_date=end_date,
-        portfolio=portfolio,
-        show_reasoning=args.show_reasoning,
-        selected_analysts=selected_analysts,
-        model_name=model_choice,
-        model_provider=model_provider,
-    )
-    print_trading_output(result)
+    try:
+        result = run_plutex(
+            tickers=tickers,
+            start_date=start_date,
+            end_date=end_date,
+            portfolio=portfolio,
+            show_reasoning=args.show_reasoning,
+            selected_analysts=selected_analysts,
+            model_name=model_choice,
+            model_provider=model_provider,
+        )
+        print_trading_output(result)
+        return 0  # Success
+    except Exception as e:
+        print(f"{Fore.RED}Error running plutex: {e}{Style.RESET_ALL}")
+        return 1  # Error
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
