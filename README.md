@@ -4,15 +4,15 @@ This is a proof of concept for an AI-powered trading system. The goal of this pr
 
 This system employs several agents working together:
 
-1. **Ben Graham Agent** - The godfather of value investing, only buys hidden gems with a margin of safety.
-2. **Bill Ackman Agent** - An activist investor, takes bold positions and pushes for change.
-3. **Cathie Wood Agent** - The queen of growth investing, believes in the power of innovation and disruption.
-4. **Charlie Munger Agent** - Warren Buffett's partner, only buys wonderful businesses at fair prices.
-5. **Peter Lynch Agent** - Legendary growth investor who seeks "ten-baggers" and invests in what he knows.
-6. **Phil Fisher Agent** - Legendary growth investor who mastered scuttlebutt analysis.
-7. **Stanley Druckenmiller Agent** - Macro legend who hunts for asymmetric opportunities with growth potential.
-8. **Warren Buffett Agent** - The oracle of Omaha, seeks wonderful companies at a fair price.
-9. **Valuation Agent** - Calculates the intrinsic value of a stock and generates trading signals.
+01. **Ben Graham Agent** - The godfather of value investing, only buys hidden gems with a margin of safety.
+02. **Bill Ackman Agent** - An activist investor, takes bold positions and pushes for change.
+03. **Cathie Wood Agent** - The queen of growth investing, believes in the power of innovation and disruption.
+04. **Charlie Munger Agent** - Warren Buffett's partner, only buys wonderful businesses at fair prices.
+05. **Peter Lynch Agent** - Legendary growth investor who seeks "ten-baggers" and invests in what he knows.
+06. **Phil Fisher Agent** - Legendary growth investor who mastered scuttlebutt analysis.
+07. **Stanley Druckenmiller Agent** - Macro legend who hunts for asymmetric opportunities with growth potential.
+08. **Warren Buffett Agent** - The oracle of Omaha, seeks wonderful companies at a fair price.
+09. **Valuation Agent** - Calculates the intrinsic value of a stock and generates trading signals.
 10. **Sentiment Agent** - Analyzes market sentiment and generates trading signals.
 11. **Fundamentals Agent** - Analyzes fundamental data and generates trading signals.
 12. **Technicals Agent** - Analyzes technical indicators and generates trading signals.
@@ -205,15 +205,15 @@ python -m src.main --tickers AAPL --show-agent-graph
 python src/main.py --ticker AAPL,MSFT,NVDA
 ? Select your AI analysts. [Cathie Wood]
 
-Selected analysts: Cathie Wood
+Selected analysts: Cathie Wood # Note here you may press `a` to select all and `a` again to deselect all
 
 ? Select your LLM model: [gemini] gemini-2.5-pro
 
 Selected Gemini model: gemini-2.5-pro-exp-03-25
 
- ✓ Cathie Wood         [NVDA] Done
- ✓ Risk Management     [NVDA] Done
- ✓ Portfolio Management[NVDA] Done
+  ✓ Cathie Wood         [NVDA] Done
+  ✓ Risk Management     [NVDA] Done
+  ✓ Portfolio Management[NVDA] Done
 
 Analysis for AAPL
 ==================================================
