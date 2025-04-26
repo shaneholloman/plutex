@@ -1,9 +1,11 @@
-from langchain_core.messages import HumanMessage
-from graph.state import AgentState, show_agent_reasoning
-from utils.progress import progress
 import json
+from statistics import median
 
-from tools.api import get_financial_metrics, get_market_cap, search_line_items
+from langchain_core.messages import HumanMessage
+
+from src.graph.state import AgentState, show_agent_reasoning
+from src.tools.api import get_financial_metrics, get_market_cap, search_line_items
+from src.utils.progress import progress
 
 
 ##### Valuation Agent #####
@@ -24,6 +26,7 @@ def valuation_agent(state: AgentState):
             ticker=ticker,
             end_date=end_date,
             period="ttm",
+            limit=8,  # Fetch 8 periods for median EV/EBITDA
         )
 
         # Add safety check for financial metrics
@@ -102,7 +105,22 @@ def valuation_agent(state: AgentState):
             num_years=5,
         )
 
-        progress.update_status("valuation_agent", ticker, "Comparing to market value")
+        progress.update_status("valuation_agent", ticker, "Calculating EV/EBITDA value")
+        # Implied Equity Value
+        ev_ebitda_value = calculate_ev_ebitda_value(financial_metrics)
+
+        progress.update_status(
+            "valuation_agent", ticker, "Calculating Residual Income value"
+        )
+        # Residual Income Model
+        rim_value = calculate_residual_income_value(
+            market_cap=metrics.market_cap,
+            net_income=current_ni,
+            price_to_book_ratio=metrics.price_to_book_ratio,
+            book_value_growth=metrics.book_value_growth or 0.03,
+        )
+
+        progress.update_status("valuation_agent", ticker, "Aggregating valuations")
         # Get the market cap
         market_cap = get_market_cap(ticker=ticker, end_date=end_date)
 
@@ -111,57 +129,90 @@ def valuation_agent(state: AgentState):
             progress.update_status(
                 "valuation_agent", ticker, "Failed: Invalid market cap for valuation"
             )
-            valuation_gap = 0.0
-            dcf_gap = 0.0
-            owner_earnings_gap = 0.0
-            dcf_details = (
-                f"Intrinsic Value: ${dcf_value:,.2f}, Market Cap: N/A, Gap: N/A"
-            )
-            owner_earnings_details = f"Owner Earnings Value: ${owner_earnings_value:,.2f}, Market Cap: N/A, Gap: N/A"
-        else:
-            # Calculate combined valuation gap (average of both methods)
-            dcf_gap = (dcf_value - market_cap) / market_cap
-            owner_earnings_gap = (owner_earnings_value - market_cap) / market_cap
-            valuation_gap = (dcf_gap + owner_earnings_gap) / 2
-            dcf_details = f"Intrinsic Value: ${dcf_value:,.2f}, Market Cap: ${market_cap:,.2f}, Gap: {dcf_gap:.1%}"
-            owner_earnings_details = f"Owner Earnings Value: ${owner_earnings_value:,.2f}, Market Cap: ${market_cap:,.2f}, Gap: {owner_earnings_gap:.1%}"
+            continue  # Skip to next ticker if market cap is invalid
 
-        if valuation_gap > 0.15:  # More than 15% undervalued
-            signal = "bullish"
-        elif valuation_gap < -0.15:  # More than 15% overvalued
-            signal = "bearish"
-        else:
-            signal = "neutral"
-
-        # Create the reasoning
-        reasoning = {}
-        reasoning["dcf_analysis"] = {
-            "signal": (
-                "bullish"
-                if dcf_gap > 0.15
-                else "bearish"
-                if dcf_gap < -0.15
-                else "neutral"
-            ),
-            "details": dcf_details,
+        # Define valuation methods, their values, and weights
+        method_values = {
+            "dcf": {"value": dcf_value, "weight": 0.35},
+            "owner_earnings": {"value": owner_earnings_value, "weight": 0.35},
+            "ev_ebitda": {"value": ev_ebitda_value, "weight": 0.20},
+            "residual_income": {"value": rim_value, "weight": 0.10},
         }
 
-        reasoning["owner_earnings_analysis"] = {
-            "signal": (
-                "bullish"
-                if owner_earnings_gap > 0.15
-                else "bearish"
-                if owner_earnings_gap < -0.15
-                else "neutral"
-            ),
-            "details": owner_earnings_details,
-        }
-
-        confidence = (
-            round(abs(valuation_gap), 2) * 100
-            if market_cap is not None and market_cap > 0
-            else 0.0
+        # Calculate total weight of valid (non-zero) methods
+        total_weight = sum(
+            v["weight"]
+            for v in method_values.values()
+            if v["value"] is not None and v["value"] > 0
         )
+        if total_weight == 0:
+            progress.update_status(
+                "valuation_agent",
+                ticker,
+                "Failed: All valuation methods zero or invalid",
+            )
+            continue  # Skip if no valid methods
+
+        # Calculate gap for each method
+        for v in method_values.values():
+            if v["value"] is not None and v["value"] > 0:
+                v["gap"] = (v["value"] - market_cap) / market_cap
+            else:
+                v["gap"] = None  # Assign None if value is invalid or zero
+
+        # Calculate weighted gap, considering only valid methods
+        weighted_gap = (
+            sum(
+                v["weight"] * v["gap"]
+                for v in method_values.values()
+                if v["gap"] is not None
+            )
+            / total_weight
+        )
+
+        # Determine overall signal based on weighted gap
+        signal = (
+            "bullish"
+            if weighted_gap > 0.15
+            else "bearish"
+            if weighted_gap < -0.15
+            else "neutral"
+        )
+        confidence = round(
+            min(abs(weighted_gap) / 0.30 * 100, 100)
+        )  # Normalize confidence
+
+        # Create detailed reasoning for each method
+        reasoning = {}
+        for method_name, vals in method_values.items():
+            if (
+                vals["value"] is not None
+                and vals["value"] > 0
+                and vals["gap"] is not None
+            ):
+                method_signal = (
+                    "bullish"
+                    if vals["gap"] > 0.15
+                    else "bearish"
+                    if vals["gap"] < -0.15
+                    else "neutral"
+                )
+                details = (
+                    f"Value: ${vals['value']:,.2f}, Market Cap: ${market_cap:,.2f}, "
+                    f"Gap: {vals['gap']:.1%}, Weight: {vals['weight'] * 100:.0f}%"
+                )
+                reasoning[f"{method_name}_analysis"] = {
+                    "signal": method_signal,
+                    "details": details,
+                }
+            elif (
+                vals["value"] is not None
+            ):  # Handle cases where value exists but gap couldn't be calculated (e.g., zero market cap) or value is zero
+                reasoning[f"{method_name}_analysis"] = {
+                    "signal": "neutral",  # Or indicate invalid? Neutral seems safer.
+                    "details": f"Value: ${vals['value']:,.2f}, Market Cap: ${market_cap:,.2f}, Gap: N/A, Weight: {vals['weight'] * 100:.0f}% (Method resulted in zero or invalid value)",
+                }
+
         valuation_analysis[ticker] = {
             "signal": signal,
             "confidence": confidence,
@@ -305,3 +356,92 @@ def calculate_working_capital_change(
         float: Change in working capital (current - previous)
     """
     return current_working_capital - previous_working_capital
+
+
+def calculate_ev_ebitda_value(financial_metrics: list):
+    """Implied equity value via median EV/EBITDA multiple."""
+    if not financial_metrics:
+        return 0
+    m0 = financial_metrics[0]
+    # Ensure required metrics are present and valid
+    if not (
+        m0.enterprise_value
+        and m0.enterprise_value_to_ebitda_ratio
+        and m0.enterprise_value_to_ebitda_ratio != 0
+    ):
+        return 0
+
+    ebitda_now = m0.enterprise_value / m0.enterprise_value_to_ebitda_ratio
+    # Calculate median safely, filtering None or zero values
+    valid_ratios = [
+        m.enterprise_value_to_ebitda_ratio
+        for m in financial_metrics
+        if m.enterprise_value_to_ebitda_ratio is not None
+        and m.enterprise_value_to_ebitda_ratio != 0
+    ]
+    if not valid_ratios:
+        return 0  # Return 0 if no valid ratios found
+    med_mult = median(valid_ratios)
+
+    ev_implied = med_mult * ebitda_now
+    # Calculate net debt safely, handling potential None values
+    net_debt = (m0.enterprise_value or 0) - (m0.market_cap or 0)
+    return max(ev_implied - net_debt, 0)
+
+
+def calculate_residual_income_value(
+    market_cap: float | None,
+    net_income: float | None,
+    price_to_book_ratio: float | None,
+    book_value_growth: float = 0.03,
+    cost_of_equity: float = 0.10,
+    terminal_growth_rate: float = 0.03,
+    num_years: int = 5,
+):
+    """Residual Income Model (Edwards‑Bell‑Ohlson)."""
+    # Ensure all required inputs are valid numbers and price_to_book_ratio is positive
+    if not (
+        market_cap
+        and net_income
+        and price_to_book_ratio
+        and price_to_book_ratio > 0
+        and isinstance(market_cap, (int, float))
+        and isinstance(net_income, (int, float))
+        and isinstance(price_to_book_ratio, (int, float))
+    ):
+        return 0
+
+    book_val = market_cap / price_to_book_ratio
+    ri0 = net_income - cost_of_equity * book_val
+    # Residual income must be positive to proceed
+    if ri0 <= 0:
+        return 0
+
+    pv_ri = 0.0
+    # Calculate present value of future residual incomes
+    for yr in range(1, num_years + 1):
+        ri_t = ri0 * (1 + book_value_growth) ** yr
+        pv_ri += ri_t / (1 + cost_of_equity) ** yr
+
+    # Calculate terminal residual income and its present value
+    # Ensure terminal growth rate is less than cost of equity
+    if cost_of_equity <= terminal_growth_rate:
+        # Handle case where cost of equity is not greater than terminal growth rate
+        # Option 1: Return current book value + PV of RI (conservative)
+        # Option 2: Use a modified terminal growth rate (e.g., cost_of_equity - small_epsilon)
+        # Option 3: Return 0 or raise an error
+        # Choosing Option 1 for conservatism here:
+        # return book_val + pv_ri
+        # Or let's return 0 to indicate valuation failure in this edge case
+        return 0  # Indicate failure if cost_of_equity <= terminal_growth_rate
+
+    term_ri = (
+        ri0
+        * (1 + book_value_growth) ** (num_years + 1)
+        / (cost_of_equity - terminal_growth_rate)
+    )
+    pv_term = term_ri / (1 + cost_of_equity) ** num_years
+
+    intrinsic = book_val + pv_ri + pv_term
+    # Apply a margin of safety (e.g., 20%)
+    return intrinsic * 0.8

@@ -97,15 +97,18 @@ By using this software, you agree to use it solely for learning purposes.
 
 ## Table of Contents
 
-- [Prerequisites](#prerequisites)
-- [Setup](#setup)
-- [Usage](#usage)
+- [Plutus](#plutus)
+  - [Disclaimer](#disclaimer)
+  - [Table of Contents](#table-of-contents)
+  - [Prerequisites](#prerequisites)
+  - [Setup](#setup)
+  - [Usage](#usage)
     - [Running Plutus](#running-plutus)
     - [Running the Backtester](#running-the-backtester)
-- [Project Structure](#project-structure)
-- [Contributing](#contributing)
-- [Feature Requests](#feature-requests)
-- [License](#license)
+  - [Project Structure](#project-structure)
+  - [Contributing](#contributing)
+  - [Feature Requests](#feature-requests)
+  - [License](#license)
 
 ## Prerequisites
 
@@ -181,13 +184,22 @@ Run the main script, providing the required `--tickers` argument. You will be in
 
 ```sh
 # Basic run with specific tickers
-python src/main.py --tickers AAPL,MSFT,NVDA
+python -m src.main --tickers AAPL,MSFT,NVDA
 
 # Run with reasoning shown
-python src/main.py --tickers AAPL,MSFT,NVDA --show-reasoning
+python -m src.main --tickers AAPL,MSFT,NVDA --show-reasoning
 
 # Run for a specific date range
-python src/main.py --tickers AAPL,MSFT,NVDA --start-date 2025-01-01 --end-date 2025-03-01
+python -m src.main --tickers AAPL,MSFT,NVDA --start-date 2025-01-01 --end-date 2025-03-01
+
+# Run with specific initial cash (e.g., $50,000)
+python -m src.main --tickers AAPL,MSFT,NVDA --initial-cash 50000
+
+# Run with a specific margin requirement (e.g., 50%)
+python -m src.main --tickers AAPL,MSFT,NVDA --margin-requirement 0.5
+
+# Run and save the agent graph visualization (saves as [analyst_name(s)]_graph.png)
+python -m src.main --tickers AAPL --show-agent-graph
 ```
 
 **Example Output:** (Output format may vary)

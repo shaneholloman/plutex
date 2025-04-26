@@ -1,6 +1,5 @@
-# Corrected content for src/data/models.py
 from pydantic import BaseModel
-from typing import Union, List, Dict  # Import necessary types
+from typing import Union, List, Dict
 
 
 class Price(BaseModel):

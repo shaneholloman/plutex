@@ -1,28 +1,27 @@
+import itertools
 import sys
-
 from datetime import datetime, timedelta
-from dateutil.relativedelta import relativedelta
-import questionary
+from typing import Any, Dict, List, TypedDict  # Import necessary types
 
 import matplotlib.pyplot as plt
-import pandas as pd
-from colorama import Fore, Style, init
 import numpy as np
-import itertools
-from typing import TypedDict, Dict, List, Any  # Import necessary types
+import pandas as pd
+import questionary
+from colorama import Fore, Style, init
+from dateutil.relativedelta import relativedelta
+from typing_extensions import Callable
 
-from llm.models import LLM_ORDER, get_model_info
-from utils.analysts import ANALYST_ORDER
-from main import run_plutus
-from tools.api import (
+from src.llm.models import LLM_ORDER, get_model_info
+from src.main import run_plutus
+from src.tools.api import (
     get_company_news,
-    get_price_data,
-    get_prices,
     get_financial_metrics,
     get_insider_trades,
+    get_price_data,
+    get_prices,
 )
-from utils.display import print_backtest_results, format_backtest_row
-from typing_extensions import Callable
+from src.utils.analysts import ANALYST_ORDER
+from src.utils.display import format_backtest_row, print_backtest_results
 
 init(autoreset=True)
 
