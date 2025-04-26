@@ -1,10 +1,10 @@
-# Plutus Project Audit: Modernization & PyPI Readiness (2025-04-03)
+# plutex Project Audit: Modernization & PyPI Readiness (2025-04-03)
 
-**Objective:** Assess the Plutus project's current state and outline steps required to meet 2025 standards, ensure compatibility with Python 3.10-3.13, prepare for PyPI publication with automated testing/deployment and secure practices, and consolidate tooling with Ruff.
+**Objective:** Assess the plutex project's current state and outline steps required to meet 2025 standards, ensure compatibility with Python 3.10-3.13, prepare for PyPI publication with automated testing/deployment and secure practices, and consolidate tooling with Ruff.
 
 ## 1. Executive Summary
 
-Plutus is an innovative AI-powered trading system proof-of-concept with a multi-agent architecture. While functional, the project requires significant modernization to meet current standards, ensure broader Python compatibility (3.10-3.13), and become a dependable PyPI package. Key findings indicate outdated dependencies (especially Langchain), a need for code quality improvements (acknowledged in README), incomplete PyPI metadata, lack of automated testing/deployment, and opportunities to consolidate tooling using Ruff. Security practices around API key handling also require review. This audit recommends a phased approach focusing on establishing robust testing and CI/CD, migrating to Ruff, updating dependencies incrementally, refactoring code, completing PyPI requirements, and enhancing security and documentation.
+plutex is an innovative AI-powered trading system proof-of-concept with a multi-agent architecture. While functional, the project requires significant modernization to meet current standards, ensure broader Python compatibility (3.10-3.13), and become a dependable PyPI package. Key findings indicate outdated dependencies (especially Langchain), a need for code quality improvements (acknowledged in README), incomplete PyPI metadata, lack of automated testing/deployment, and opportunities to consolidate tooling using Ruff. Security practices around API key handling also require review. This audit recommends a phased approach focusing on establishing robust testing and CI/CD, migrating to Ruff, updating dependencies incrementally, refactoring code, completing PyPI requirements, and enhancing security and documentation.
 
 ## 2. Current State Analysis
 
@@ -51,7 +51,7 @@ Plutus is an innovative AI-powered trading system proof-of-concept with a multi-
     - `license = "MIT"` (or confirm from `LICENSE` file).
     - `classifiers` (e.g., `Programming Language :: Python :: 3`, `License :: OSI Approved :: MIT License`, `Operating System :: OS Independent`, `Topic :: Office/Business :: Financial :: Investment`, `Intended Audience :: Developers`, `Development Status :: 3 - Alpha`). [See PyPI classifiers list](https://pypi.org/classifiers/).
     - `keywords` (e.g., `trading`, `AI`, `LLM`, `langchain`, `finance`, `investment`, `agent`).
-    - `project_urls` (e.g., `Homepage = "https://github.com/shaneholloman/plutus"`, `Repository = "https://github.com/shaneholloman/plutus"`, `Issues = "https://github.com/shaneholloman/plutus/issues"`).
+    - `project_urls` (e.g., `Homepage = "https://github.com/shaneholloman/plutex"`, `Repository = "https://github.com/shaneholloman/plutex"`, `Issues = "https://github.com/shaneholloman/plutex/issues"`).
 - **Packaging:**
 
   - _Build System:_ `hatchling` is suitable.
@@ -60,8 +60,8 @@ Plutus is an innovative AI-powered trading system proof-of-concept with a multi-
 
     ```toml
     [project.scripts]
-    plutus = "src.main:main" # Assuming main function exists in src/main.py
-    plutus-backtest = "src.backtester:main" # Assuming main function exists
+    plutex = "src.main:main" # Assuming main function exists in src/main.py
+    plutex-backtest = "src.backtester:main" # Assuming main function exists
     ```
 
 - **Testing Strategy:**

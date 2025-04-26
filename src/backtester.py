@@ -12,7 +12,7 @@ from dateutil.relativedelta import relativedelta
 from typing_extensions import Callable
 
 from src.llm.models import LLM_ORDER, get_model_info
-from src.main import run_plutus
+from src.main import run_plutex
 from src.tools.api import (
     get_company_news,
     get_financial_metrics,
@@ -835,7 +835,7 @@ if __name__ == "__main__":
             questionary.Choice(str(display), value=value)
             for display, value in ANALYST_ORDER
         ],
-        instruction="\n\nPress 'a' to toggle all.\n\nPress Enter when done to run Plutus.",
+        instruction="\n\nPress 'a' to toggle all.\n\nPress Enter when done to run plutex.",
         validate=lambda x: len(x) > 0 or "You must select at least one analyst.",
         style=questionary.Style(
             [
@@ -891,7 +891,7 @@ if __name__ == "__main__":
 
     # Create and run the backtester
     backtester = Backtester(
-        agent=run_plutus,
+        agent=run_plutex,
         tickers=tickers,
         start_date=args.start_date,
         end_date=args.end_date,

@@ -1,17 +1,17 @@
-# Project Brief: Plutus Refactor & Enhancement
+# Project Brief: plutex Refactor & Enhancement
 
 ## 1. Project Goal
 
-Refactor the existing `../ai-hedge-fund` Python project into a new project named `plutus`. The primary goal is to significantly improve coding standards, maintainability, and potentially modernize the architecture while selectively incorporating valuable functionality updates from the original `../ai-hedge-fund` project.
+Refactor the existing `../ai-hedge-fund` Python project into a new project named `plutex`. The primary goal is to significantly improve coding standards, maintainability, and potentially modernize the architecture while selectively incorporating valuable functionality updates from the original `../ai-hedge-fund` project.
 
 ## 2. Core Objectives
 
-- **Establish High Coding Standards:** Implement and enforce strict coding standards (linting, formatting, type checking, testing) in the `plutus` project.
-- **Refactor Core Logic:** Review and refactor the core agent logic, data handling, and decision-making processes from `../ai-hedge-fund` for clarity, efficiency, and robustness in `plutus`.
-- **A/B Comparison:** Conduct a thorough comparison between `plutus` and `../ai-hedge-fund` to identify differences in features, dependencies, and implementation details.
-- **Selective Feature Integration:** Identify and evaluate recent features or improvements in `../ai-hedge-fund` for potential integration into `plutus`, ensuring they align with the new standards.
-- **Modernize Dependencies & Setup:** Utilize modern Python practices, potentially updating dependencies (e.g., using `uv` in `plutus` vs. `poetry` in `../ai-hedge-fund`) and improving the development environment setup.
-- **Maintain Documentation:** Create and maintain comprehensive documentation for `plutus` within the `memory-bank/` directory structure.
+- **Establish High Coding Standards:** Implement and enforce strict coding standards (linting, formatting, type checking, testing) in the `plutex` project.
+- **Refactor Core Logic:** Review and refactor the core agent logic, data handling, and decision-making processes from `../ai-hedge-fund` for clarity, efficiency, and robustness in `plutex`.
+- **A/B Comparison:** Conduct a thorough comparison between `plutex` and `../ai-hedge-fund` to identify differences in features, dependencies, and implementation details.
+- **Selective Feature Integration:** Identify and evaluate recent features or improvements in `../ai-hedge-fund` for potential integration into `plutex`, ensuring they align with the new standards.
+- **Modernize Dependencies & Setup:** Utilize modern Python practices, potentially updating dependencies (e.g., using `uv` in `plutex` vs. `poetry` in `../ai-hedge-fund`) and improving the development environment setup.
+- **Maintain Documentation:** Create and maintain comprehensive documentation for `plutex` within the `memory-bank/` directory structure.
 
 ## 3. Scope
 
@@ -28,13 +28,13 @@ Refactor the existing `../ai-hedge-fund` Python project into a new project named
 
 ## 4. Key Repositories
 
-- `plutus/`: The target repository for the refactored, high-standard project.
+- `plutex/`: The target repository for the refactored, high-standard project.
 - `../ai-hedge-fund/`: The source repository, used for comparison and potential feature extraction.
 - `ai-financial-agent/`: Another repository in the project root, currently out of scope for this specific task.
 
 ## 5. Success Criteria
 
-- `plutus` project adheres to defined coding standards (documented in `.clinerules`).
-- Core functionality from `../ai-hedge-fund` (as deemed valuable) is present and refactored in `plutus`.
+- `plutex` project adheres to defined coding standards (documented in `.clinerules`).
+- Core functionality from `../ai-hedge-fund` (as deemed valuable) is present and refactored in `plutex`.
 - Clear documentation exists in the Memory Bank detailing the project state, decisions, and progress.
-- The `plutus` project is runnable and demonstrates the intended agent-based trading simulation logic.
+- The `plutex` project is runnable and demonstrates the intended agent-based trading simulation logic.

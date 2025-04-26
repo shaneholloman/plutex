@@ -1352,7 +1352,7 @@ wheels = [
 ]
 
 [[package]]
-name = "plutus"
+name = "plutex"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [

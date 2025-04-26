@@ -1,8 +1,8 @@
-# System Patterns: Plutus AI Trading System
+# System Patterns: plutex AI Trading System
 
 ## 1. High-Level Architecture
 
-Both `plutus` and `../ai-hedge-fund` appear to follow a multi-agent system (MAS) architecture. The core idea is to decompose the complex task of trading analysis and decision-making into specialized, independent agents.
+Both `plutex` and `../ai-hedge-fund` appear to follow a multi-agent system (MAS) architecture. The core idea is to decompose the complex task of trading analysis and decision-making into specialized, independent agents.
 
 ```mermaid
 graph LR
@@ -60,15 +60,15 @@ graph LR
 
 - **Agent-Based Design:** The system is fundamentally built around specialized agents. This promotes modularity and allows for different "expert opinions" to be incorporated.
 - **LLM-Powered Reasoning:** Agents leverage Large Language Models for complex analysis, interpretation, and generating human-readable reasoning. This suggests a pattern of prompt engineering and interaction with external LLM APIs.
-- **Pipeline/Workflow Processing:** The flow from data fetching -> agent analysis -> risk management -> portfolio management suggests a pipeline or workflow pattern. The `plutus` README explicitly shows a Mermaid diagram illustrating this flow. `../ai-hedge-fund` likely follows a similar pattern. LangGraph is listed as a dependency, which strongly suggests a graph-based workflow for managing agent interactions.
-- **Command-Line Interface (CLI):** Both projects use a CLI (`main.py`, `backtester.py`) as the primary user interface for configuration and execution. Libraries like `questionary` (in `plutus`) suggest interactive CLI elements.
+- **Pipeline/Workflow Processing:** The flow from data fetching -> agent analysis -> risk management -> portfolio management suggests a pipeline or workflow pattern. The `plutex` README explicitly shows a Mermaid diagram illustrating this flow. `../ai-hedge-fund` likely follows a similar pattern. LangGraph is listed as a dependency, which strongly suggests a graph-based workflow for managing agent interactions.
+- **Command-Line Interface (CLI):** Both projects use a CLI (`main.py`, `backtester.py`) as the primary user interface for configuration and execution. Libraries like `questionary` (in `plutex`) suggest interactive CLI elements.
 - **Dependency Management:**
-    - `plutus`: Uses `uv` and `pyproject.toml` (with hatchling build backend).
+    - `plutex`: Uses `uv` and `pyproject.toml` (with hatchling build backend).
     - `../ai-hedge-fund`: Uses `poetry` and `pyproject.toml`.
 - **Environment Configuration:** Both use `.env` files for managing sensitive API keys.
 - **Modularity (Project Structure):** Both projects organize code into `src/` with subdirectories for `agents/`, `tools/`, `llm/`, `data/`, etc., indicating an attempt at modular design.
 - **Backtesting Framework:** A separate `backtester.py` script suggests a dedicated component for strategy evaluation over historical data.
-- **Dockerization (`../ai-hedge-fund`):** `../ai-hedge-fund` includes Docker configuration (`Dockerfile`, `docker-compose.yml`, `run.sh`, `run.bat`) for containerized deployment and execution, including integration with Ollama for local LLMs. `plutus` does not show this currently.
+- **Dockerization (`../ai-hedge-fund`):** `../ai-hedge-fund` includes Docker configuration (`Dockerfile`, `docker-compose.yml`, `run.sh`, `run.bat`) for containerized deployment and execution, including integration with Ollama for local LLMs. `plutex` does not show this currently.
 
 ## 3. Component Relationships
 
@@ -80,9 +80,9 @@ graph LR
 - **Graph Modules (`src/graph/`):** Likely related to LangGraph implementation, defining the execution flow and state management between agents.
 - **Utility Modules (`src/utils/`):** General helper functions.
 
-## 4. Potential Areas for Improvement (Plutus Focus)
+## 4. Potential Areas for Improvement (plutex Focus)
 
-- **Standardization:** Ensure consistent patterns across all agents in `plutus`.
+- **Standardization:** Ensure consistent patterns across all agents in `plutex`.
 - **Error Handling:** Implement robust error handling throughout the pipeline.
 - **Testing:** Introduce unit and integration tests for agents and core components.
 - **Configuration Management:** Potentially improve how configurations (agents, models, parameters) are managed beyond CLI arguments.

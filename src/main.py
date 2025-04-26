@@ -25,7 +25,7 @@ load_dotenv()
 init(autoreset=True)
 
 
-def parse_plutus_response(response):
+def parse_plutex_response(response):
     """Parses a JSON string and returns a dictionary."""
     try:
         return json.loads(response)
@@ -44,8 +44,8 @@ def parse_plutus_response(response):
         return None
 
 
-##### Run Plutus #####
-def run_plutus(
+##### Run plutex #####
+def run_plutex(
     tickers: list[str],
     start_date: str,
     end_date: str,
@@ -89,7 +89,7 @@ def run_plutus(
         )
 
         return {
-            "decisions": parse_plutus_response(final_state["messages"][-1].content),
+            "decisions": parse_plutex_response(final_state["messages"][-1].content),
             "analyst_signals": final_state["data"]["analyst_signals"],
         }
     finally:
@@ -136,7 +136,7 @@ def create_workflow(selected_analysts=None):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Run the Plutus trading system")
+    parser = argparse.ArgumentParser(description="Run the plutex trading system")
     parser.add_argument(
         "--initial-cash",
         type=float,
@@ -184,7 +184,7 @@ if __name__ == "__main__":
             questionary.Choice(str(display), value=value)
             for display, value in ANALYST_ORDER
         ],
-        instruction="\n\nInstructions: \n1. Press Space to select/unselect analysts.\n2. Press 'a' to select/unselect all.\n3. Press Enter when done to run Plutus.\n",
+        instruction="\n\nInstructions: \n1. Press Space to select/unselect analysts.\n2. Press 'a' to select/unselect all.\n3. Press Enter when done to run plutex.\n",
         validate=lambda x: len(x) > 0 or "You must select at least one analyst.",
         style=questionary.Style(
             [
@@ -296,8 +296,8 @@ if __name__ == "__main__":
         },
     }
 
-    # Run Plutus
-    result = run_plutus(
+    # Run plutex
+    result = run_plutex(
         tickers=tickers,
         start_date=start_date,
         end_date=end_date,

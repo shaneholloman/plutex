@@ -1,7 +1,7 @@
 [project]
-name = "plutus"
+name = "plutex"
 version = "0.1.0"
-description = "Plutus: An AI-powered trading system using multiple agents"
+description = "plutex: An AI-powered trading system using multiple agents"
 authors = [{ name = "Shane Holloman", email = "shaneholloman@gmail.com" }]
 requires-python = "~=3.11"
 readme = "README.md"

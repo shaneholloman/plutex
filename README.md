@@ -1,4 +1,4 @@
-# Plutus
+# plutex
 
 This is a proof of concept for an AI-powered trading system. The goal of this project is to explore the use of AI to make trading decisions. This project is for **educational** purposes only and is not intended for real trading or investment.
 
@@ -94,13 +94,13 @@ By using this software, you agree to use it solely for learning purposes.
 
 ## Table of Contents
 
-- [Plutus](#plutus)
+- [plutex](#plutex)
   - [Disclaimer](#disclaimer)
   - [Table of Contents](#table-of-contents)
   - [Prerequisites](#prerequisites)
   - [Setup](#setup)
   - [Usage](#usage)
-    - [Running Plutus](#running-plutus)
+    - [Running plutex](#running-plutex)
     - [Running the Backtester](#running-the-backtester)
   - [Project Structure](#project-structure)
   - [Contributing](#contributing)
@@ -117,8 +117,8 @@ By using this software, you agree to use it solely for learning purposes.
 1. **Clone the repository:**
 
     ```sh
-    git clone https://github.com/shaneholloman/plutus.git
-    cd plutus
+    git clone https://github.com/shaneholloman/plutex.git
+    cd plutex
     ```
 
 2. **(Optional) Install Python 3.11+ using `uv`:**
@@ -175,7 +175,7 @@ By using this software, you agree to use it solely for learning purposes.
 
 Ensure your virtual environment is activated (`source .venv/bin/activate`).
 
-### Running Plutus
+### Running plutex
 
 Run the main script, providing the required `--tickers` argument. You will be interactively prompted to select analysts and an LLM model.
 
@@ -380,7 +380,7 @@ limit. The margin requirement is 0.00, so margin
 availability is not a constraint for this trade size
 (Position Value: 89 * $222.57 = $19,808.73; Margin Used:
 $0.00).
-  plutus 3.11.11  shaneholloman @ bird.yoyo.io  plutus  main 
+  plutex 3.11.11  shaneholloman @ bird.yoyo.io  plutex  main 
 ```
 
 ### Running the Backtester
@@ -399,7 +399,7 @@ python src/backtester.py --tickers AAPL,MSFT,NVDA --start-date 2025-01-01 --end-
 ## Project Structure
 
 ```tree
-plutus/
+plutex/
 ├── src/
 │   ├── agents/                   # Agent definitions and workflow
 │   │   ├── bill_ackman.py        # Bill Ackman agent
@@ -437,7 +437,7 @@ plutus/
 
 ## Feature Requests
 
-If you have a feature request, please open an [issue](https://github.com/shaneholloman/plutus/issues) and make sure it is tagged with `enhancement`.
+If you have a feature request, please open an [issue](https://github.com/shaneholloman/plutex/issues) and make sure it is tagged with `enhancement`.
 
 ## License
 
