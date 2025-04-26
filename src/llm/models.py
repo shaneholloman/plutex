@@ -81,9 +81,14 @@ AVAILABLE_MODELS = [
         provider=ModelProvider.GEMINI,
     ),
     LLMModel(
-        display_name="[groq] llama-3.3 70b",
-        model_name="llama-3.3-70b-versatile",
-        provider=ModelProvider.GROQ,
+        display_name="[groq] llama-4-scout-17b",
+        model_name="meta-llama/llama-4-scout-17b-16e-instruct",
+        provider=ModelProvider.GROQ
+    ),
+    LLMModel(
+        display_name="[groq] llama-4-maverick-17b",
+        model_name="meta-llama/llama-4-maverick-17b-128e-instruct",
+        provider=ModelProvider.GROQ
     ),
     LLMModel(
         display_name="[openai] gpt-4.5",
