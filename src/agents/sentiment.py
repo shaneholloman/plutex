@@ -9,14 +9,34 @@ from tools.api import get_insider_trades, get_company_news
 
 
 ##### Sentiment Agent #####
+from typing import List, Dict, Any
+
+
+##### Sentiment Agent #####
 def sentiment_agent(state: AgentState):
     """Analyzes market sentiment and generates trading signals for multiple tickers."""
-    data = state.get("data", {})
-    end_date = data.get("end_date")
-    tickers = data.get("tickers")
+    data: Dict[str, Any] = state.get("data", {})
+    end_date: str | None = data.get("end_date")
+    tickers: List[str] | None = data.get("tickers")
 
     # Initialize sentiment analysis for each ticker
     sentiment_analysis = {}
+
+    # --- Input Validation ---
+    if not tickers or not isinstance(tickers, list):
+        progress.update_status(
+            "sentiment_agent", None, "Failed: Invalid or missing tickers list"
+        )
+        # Return current state if inputs are invalid
+        return {"messages": state["messages"], "data": data}
+
+    if not end_date or not isinstance(end_date, str):
+        progress.update_status(
+            "sentiment_agent", None, "Failed: Invalid or missing end_date"
+        )
+        # Return current state if inputs are invalid
+        return {"messages": state["messages"], "data": data}
+    # --- End Input Validation ---
 
     for ticker in tickers:
         progress.update_status("sentiment_agent", ticker, "Fetching insider trades")
@@ -31,8 +51,12 @@ def sentiment_agent(state: AgentState):
         progress.update_status("sentiment_agent", ticker, "Analyzing trading patterns")
 
         # Get the signals from the insider trades
-        transaction_shares = pd.Series([t.transaction_shares for t in insider_trades]).dropna()
-        insider_signals = np.where(transaction_shares < 0, "bearish", "bullish").tolist()
+        transaction_shares = pd.Series(
+            [t.transaction_shares for t in insider_trades]
+        ).dropna()
+        insider_signals = np.where(
+            transaction_shares < 0, "bearish", "bullish"
+        ).tolist()
 
         progress.update_status("sentiment_agent", ticker, "Fetching company news")
 
@@ -41,22 +65,25 @@ def sentiment_agent(state: AgentState):
 
         # Get the sentiment from the company news
         sentiment = pd.Series([n.sentiment for n in company_news]).dropna()
-        news_signals = np.where(sentiment == "negative", "bearish", 
-                              np.where(sentiment == "positive", "bullish", "neutral")).tolist()
-        
+        news_signals = np.where(
+            sentiment == "negative",
+            "bearish",
+            np.where(sentiment == "positive", "bullish", "neutral"),
+        ).tolist()
+
         progress.update_status("sentiment_agent", ticker, "Combining signals")
         # Combine signals from both sources with weights
         insider_weight = 0.3
         news_weight = 0.7
-        
+
         # Calculate weighted signal counts
         bullish_signals = (
-            insider_signals.count("bullish") * insider_weight +
-            news_signals.count("bullish") * news_weight
+            insider_signals.count("bullish") * insider_weight
+            + news_signals.count("bullish") * news_weight
         )
         bearish_signals = (
-            insider_signals.count("bearish") * insider_weight +
-            news_signals.count("bearish") * news_weight
+            insider_signals.count("bearish") * insider_weight
+            + news_signals.count("bearish") * news_weight
         )
 
         if bullish_signals > bearish_signals:
@@ -67,10 +94,15 @@ def sentiment_agent(state: AgentState):
             overall_signal = "neutral"
 
         # Calculate confidence level based on the weighted proportion
-        total_weighted_signals = len(insider_signals) * insider_weight + len(news_signals) * news_weight
+        total_weighted_signals = (
+            len(insider_signals) * insider_weight + len(news_signals) * news_weight
+        )
         confidence = 0  # Default confidence when there are no signals
         if total_weighted_signals > 0:
-            confidence = round(max(bullish_signals, bearish_signals) / total_weighted_signals, 2) * 100
+            confidence = (
+                round(max(bullish_signals, bearish_signals) / total_weighted_signals, 2)
+                * 100
+            )
         reasoning = f"Weighted Bullish signals: {bullish_signals:.1f}, Weighted Bearish signals: {bearish_signals:.1f}"
 
         sentiment_analysis[ticker] = {

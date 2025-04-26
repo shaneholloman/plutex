@@ -4,7 +4,7 @@ from typing import Union, Any
 class Cache:
     """In-memory cache for API responses."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._prices_cache: dict[str, list[dict[str, Any]]] = {}
         self._financial_metrics_cache: dict[str, list[dict[str, Any]]] = {}
         self._line_items_cache: dict[str, list[dict[str, Any]]] = {}
@@ -23,9 +23,9 @@ class Cache:
 
         # Only add items that don't exist yet
         merged = existing.copy()
-        merged.extend([
-            item for item in new_data if item[key_field] not in existing_keys
-        ])
+        merged.extend(
+            [item for item in new_data if item[key_field] not in existing_keys]
+        )
         return merged
 
     def get_prices(self, ticker: str) -> Union[list[dict[str, Any]], None]:

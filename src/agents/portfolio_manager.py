@@ -12,12 +12,16 @@ from utils.llm import call_llm
 class PortfolioDecision(BaseModel):
     action: Literal["buy", "sell", "short", "cover", "hold"]
     quantity: int = Field(description="Number of shares to trade")
-    confidence: float = Field(description="Confidence in the decision, between 0.0 and 100.0")
+    confidence: float = Field(
+        description="Confidence in the decision, between 0.0 and 100.0"
+    )
     reasoning: str = Field(description="Reasoning for the decision")
 
 
 class PortfolioManagerOutput(BaseModel):
-    decisions: dict[str, PortfolioDecision] = Field(description="Dictionary of ticker to trading decisions")
+    decisions: dict[str, PortfolioDecision] = Field(
+        description="Dictionary of ticker to trading decisions"
+    )
 
 
 ##### Portfolio Management Agent #####
@@ -37,7 +41,9 @@ def portfolio_management_agent(state: AgentState):
     max_shares = {}
     signals_by_ticker = {}
     for ticker in tickers:
-        progress.update_status("portfolio_management_agent", ticker, "Processing analyst signals")
+        progress.update_status(
+            "portfolio_management_agent", ticker, "Processing analyst signals"
+        )
 
         # Get position limits and current prices for the ticker
         risk_data = analyst_signals.get("risk_management_agent", {}).get(ticker, {})
@@ -54,10 +60,15 @@ def portfolio_management_agent(state: AgentState):
         ticker_signals = {}
         for agent, signals in analyst_signals.items():
             if agent != "risk_management_agent" and ticker in signals:
-                ticker_signals[agent] = {"signal": signals[ticker]["signal"], "confidence": signals[ticker]["confidence"]}
+                ticker_signals[agent] = {
+                    "signal": signals[ticker]["signal"],
+                    "confidence": signals[ticker]["confidence"],
+                }
         signals_by_ticker[ticker] = ticker_signals
 
-    progress.update_status("portfolio_management_agent", None, "Making trading decisions")
+    progress.update_status(
+        "portfolio_management_agent", None, "Making trading decisions"
+    )
 
     # Generate the trading decision
     result = generate_trading_decision(
@@ -72,18 +83,30 @@ def portfolio_management_agent(state: AgentState):
 
     # Create the portfolio management message
     message = HumanMessage(
-        content=json.dumps({ticker: decision.model_dump() for ticker, decision in result.decisions.items()}),
+        content=json.dumps(
+            {
+                ticker: decision.model_dump()
+                for ticker, decision in result.decisions.items()
+            }
+        ),
         name="portfolio_management",
     )
 
     # Print the decision if the flag is set
     if state["metadata"]["show_reasoning"]:
-        show_agent_reasoning({ticker: decision.model_dump() for ticker, decision in result.decisions.items()}, "Portfolio Management Agent")
+        show_agent_reasoning(
+            {
+                ticker: decision.model_dump()
+                for ticker, decision in result.decisions.items()
+            },
+            "Portfolio Management Agent",
+        )
 
     progress.update_status("portfolio_management_agent", None, "Done")
 
+    # Ensure messages are combined as lists for Mypy compatibility
     return {
-        "messages": state["messages"] + [message],
+        "messages": list(state["messages"]) + [message],
         "data": state["data"],
     }
 
@@ -102,8 +125,8 @@ def generate_trading_decision(
     template = ChatPromptTemplate.from_messages(
         [
             (
-              "system",
-              """You are a portfolio manager making final trading decisions based on multiple tickers.
+                "system",
+                """You are a portfolio manager making final trading decisions based on multiple tickers.
 
               Trading Rules:
               - For long positions:
@@ -111,13 +134,13 @@ def generate_trading_decision(
                 * Only sell if you currently hold long shares of that ticker
                 * Sell quantity must be ≤ current long position shares
                 * Buy quantity must be ≤ max_shares for that ticker
-              
+
               - For short positions:
                 * Only short if you have available margin (position value × margin requirement)
                 * Only cover if you currently have short shares of that ticker
                 * Cover quantity must be ≤ current short position shares
                 * Short quantity must respect margin requirements
-              
+
               - The max_shares values are pre-calculated to respect position limits
               - Consider both long and short opportunities based on signals
               - Maintain appropriate risk management with both long and short exposure
@@ -140,8 +163,8 @@ def generate_trading_decision(
               """,
             ),
             (
-              "human",
-              """Based on the team's analysis, make your trading decisions for each ticker.
+                "human",
+                """Based on the team's analysis, make your trading decisions for each ticker.
 
               Here are the signals by ticker:
               {signals_by_ticker}
@@ -184,7 +207,7 @@ def generate_trading_decision(
             "current_prices": json.dumps(current_prices, indent=2),
             "max_shares": json.dumps(max_shares, indent=2),
             "portfolio_cash": f"{portfolio.get('cash', 0):.2f}",
-            "portfolio_positions": json.dumps(portfolio.get('positions', {}), indent=2),
+            "portfolio_positions": json.dumps(portfolio.get("positions", {}), indent=2),
             "margin_requirement": f"{portfolio.get('margin_requirement', 0):.2f}",
             "total_margin_used": f"{portfolio.get('margin_used', 0):.2f}",
         }
@@ -192,6 +215,23 @@ def generate_trading_decision(
 
     # Create default factory for PortfolioManagerOutput
     def create_default_portfolio_output():
-        return PortfolioManagerOutput(decisions={ticker: PortfolioDecision(action="hold", quantity=0, confidence=0.0, reasoning="Error in portfolio management, defaulting to hold") for ticker in tickers})
+        return PortfolioManagerOutput(
+            decisions={
+                ticker: PortfolioDecision(
+                    action="hold",
+                    quantity=0,
+                    confidence=0.0,
+                    reasoning="Error in portfolio management, defaulting to hold",
+                )
+                for ticker in tickers
+            }
+        )
 
-    return call_llm(prompt=prompt, model_name=model_name, model_provider=model_provider, pydantic_model=PortfolioManagerOutput, agent_name="portfolio_management_agent", default_factory=create_default_portfolio_output)
+    return call_llm(
+        prompt=prompt,
+        model_name=model_name,
+        model_provider=model_provider,
+        pydantic_model=PortfolioManagerOutput,
+        agent_name="portfolio_management_agent",
+        default_factory=create_default_portfolio_output,
+    )

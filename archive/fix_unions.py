@@ -1,7 +1,6 @@
 # fix_unions.py
 import re
 import sys
-import os
 from pathlib import Path
 
 # Safest initial regex: Target only the most common simple cases seen

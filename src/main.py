@@ -3,18 +3,11 @@ import sys
 from dotenv import load_dotenv
 from langchain_core.messages import HumanMessage
 from langgraph.graph import END, StateGraph
-from colorama import Fore, Back, Style, init
+from colorama import Fore, Style, init
 import questionary
-from agents.ben_graham import ben_graham_agent
-from agents.bill_ackman import bill_ackman_agent
-from agents.fundamentals import fundamentals_agent
 from agents.portfolio_manager import portfolio_management_agent
-from agents.technicals import technical_analyst_agent
 from agents.risk_manager import risk_management_agent
-from agents.sentiment import sentiment_agent
-from agents.warren_buffett import warren_buffett_agent
 from graph.state import AgentState
-from agents.valuation import valuation_agent
 from utils.display import print_trading_output
 from utils.analysts import ANALYST_ORDER, get_analyst_nodes
 from utils.progress import progress
@@ -23,7 +16,6 @@ from llm.models import LLM_ORDER, get_model_info
 import argparse
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
-from tabulate import tabulate
 from utils.visualize import save_graph_as_png
 import json
 
@@ -188,16 +180,20 @@ if __name__ == "__main__":
     choices = questionary.checkbox(
         "Select your AI analysts.",
         choices=[
-            questionary.Choice(display, value=value) for display, value in ANALYST_ORDER
+            # Cast display to str to satisfy Mypy
+            questionary.Choice(str(display), value=value)
+            for display, value in ANALYST_ORDER
         ],
         instruction="\n\nInstructions: \n1. Press Space to select/unselect analysts.\n2. Press 'a' to select/unselect all.\n3. Press Enter when done to run Plutus.\n",
         validate=lambda x: len(x) > 0 or "You must select at least one analyst.",
-        style=questionary.Style([
-            ("checkbox-selected", "fg:green"),
-            ("selected", "fg:green noinherit"),
-            ("highlighted", "noinherit"),
-            ("pointer", "noinherit"),
-        ]),
+        style=questionary.Style(
+            [
+                ("checkbox-selected", "fg:green"),
+                ("selected", "fg:green noinherit"),
+                ("highlighted", "noinherit"),
+                ("pointer", "noinherit"),
+            ]
+        ),
     ).ask()
 
     if not choices:
@@ -215,12 +211,14 @@ if __name__ == "__main__":
         choices=[
             questionary.Choice(display, value=value) for display, value, _ in LLM_ORDER
         ],
-        style=questionary.Style([
-            ("selected", "fg:green bold"),
-            ("pointer", "fg:green bold"),
-            ("highlighted", "fg:green"),
-            ("answer", "fg:green bold"),
-        ]),
+        style=questionary.Style(
+            [
+                ("selected", "fg:green bold"),
+                ("pointer", "fg:green bold"),
+                ("highlighted", "fg:green"),
+                ("answer", "fg:green bold"),
+            ]
+        ),
     ).ask()
 
     if not model_choice:

@@ -9,6 +9,7 @@ import pandas as pd
 from colorama import Fore, Style, init
 import numpy as np
 import itertools
+from typing import TypedDict, Dict, List, Any  # Import necessary types
 
 from llm.models import LLM_ORDER, get_model_info
 from utils.analysts import ANALYST_ORDER
@@ -24,6 +25,33 @@ from utils.display import print_backtest_results, format_backtest_row
 from typing_extensions import Callable
 
 init(autoreset=True)
+
+
+# --- Type Definitions for Portfolio Structure ---
+class PositionData(TypedDict):
+    long: int
+    short: int
+    long_cost_basis: float
+    short_cost_basis: float
+    short_margin_used: float
+
+
+class RealizedGainsData(TypedDict):
+    long: float
+    short: float
+
+
+class PortfolioData(TypedDict):
+    cash: float
+    margin_used: float
+    margin_requirement: float
+    positions: Dict[str, PositionData]
+    realized_gains: Dict[str, RealizedGainsData]
+
+
+# Using Any for keys with spaces, not ideal but necessary for dict keys
+PortfolioValueData = Dict[str, Any]
+# --- End Type Definitions ---
 
 
 class Backtester:
@@ -59,9 +87,9 @@ class Backtester:
         self.model_provider = model_provider
         self.selected_analysts = selected_analysts
 
-        # Initialize portfolio with support for long/short positions
-        self.portfolio_values = []
-        self.portfolio = {
+        # Initialize portfolio with support for long/short positions and add type hints
+        self.portfolio_values: List[PortfolioValueData] = []
+        self.portfolio: PortfolioData = {
             "cash": initial_capital,
             "margin_used": 0.0,  # total margin usage across all short positions
             "margin_requirement": initial_margin_requirement,  # The margin ratio required for shorts
@@ -452,15 +480,17 @@ class Backtester:
             )
 
             # Track each day's portfolio value in self.portfolio_values
-            self.portfolio_values.append({
-                "Date": current_date,
-                "Portfolio Value": total_value,
-                "Long Exposure": long_exposure,
-                "Short Exposure": short_exposure,
-                "Gross Exposure": gross_exposure,
-                "Net Exposure": net_exposure,
-                "Long/Short Ratio": long_short_ratio,
-            })
+            self.portfolio_values.append(
+                {
+                    "Date": current_date,
+                    "Portfolio Value": total_value,
+                    "Long Exposure": long_exposure,
+                    "Short Exposure": short_exposure,
+                    "Gross Exposure": gross_exposure,
+                    "Net Exposure": net_exposure,
+                    "Long/Short Ratio": long_short_ratio,
+                }
+            )
 
             # ---------------------------------------------------------------
             # 3) Build the table rows to display
@@ -474,21 +504,27 @@ class Backtester:
                     if ticker in signals:
                         ticker_signals[agent_name] = signals[ticker]
 
-                bullish_count = len([
-                    s
-                    for s in ticker_signals.values()
-                    if s.get("signal", "").lower() == "bullish"
-                ])
-                bearish_count = len([
-                    s
-                    for s in ticker_signals.values()
-                    if s.get("signal", "").lower() == "bearish"
-                ])
-                neutral_count = len([
-                    s
-                    for s in ticker_signals.values()
-                    if s.get("signal", "").lower() == "neutral"
-                ])
+                bullish_count = len(
+                    [
+                        s
+                        for s in ticker_signals.values()
+                        if s.get("signal", "").lower() == "bullish"
+                    ]
+                )
+                bearish_count = len(
+                    [
+                        s
+                        for s in ticker_signals.values()
+                        if s.get("signal", "").lower() == "bearish"
+                    ]
+                )
+                neutral_count = len(
+                    [
+                        s
+                        for s in ticker_signals.values()
+                        if s.get("signal", "").lower() == "neutral"
+                    ]
+                )
 
                 # Calculate net position value
                 pos = self.portfolio["positions"][ticker]
@@ -796,16 +832,20 @@ if __name__ == "__main__":
     choices = questionary.checkbox(
         "Use the Space bar to select/unselect analysts.",
         choices=[
-            questionary.Choice(display, value=value) for display, value in ANALYST_ORDER
+            # Cast display to str to satisfy Mypy
+            questionary.Choice(str(display), value=value)
+            for display, value in ANALYST_ORDER
         ],
         instruction="\n\nPress 'a' to toggle all.\n\nPress Enter when done to run Plutus.",
         validate=lambda x: len(x) > 0 or "You must select at least one analyst.",
-        style=questionary.Style([
-            ("checkbox-selected", "fg:green"),
-            ("selected", "fg:green noinherit"),
-            ("highlighted", "noinherit"),
-            ("pointer", "noinherit"),
-        ]),
+        style=questionary.Style(
+            [
+                ("checkbox-selected", "fg:green"),
+                ("selected", "fg:green noinherit"),
+                ("highlighted", "noinherit"),
+                ("pointer", "noinherit"),
+            ]
+        ),
     ).ask()
 
     if not choices:
@@ -824,12 +864,14 @@ if __name__ == "__main__":
         choices=[
             questionary.Choice(display, value=value) for display, value, _ in LLM_ORDER
         ],
-        style=questionary.Style([
-            ("selected", "fg:green bold"),
-            ("pointer", "fg:green bold"),
-            ("highlighted", "fg:green"),
-            ("answer", "fg:green bold"),
-        ]),
+        style=questionary.Style(
+            [
+                ("selected", "fg:green bold"),
+                ("pointer", "fg:green bold"),
+                ("highlighted", "fg:green"),
+                ("answer", "fg:green bold"),
+            ]
+        ),
     ).ask()
 
     if not model_choice:

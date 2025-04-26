@@ -31,7 +31,9 @@ def technical_analyst_agent(state: AgentState):
     technical_analysis = {}
 
     for ticker in tickers:
-        progress.update_status("technical_analyst_agent", ticker, "Analyzing price data")
+        progress.update_status(
+            "technical_analyst_agent", ticker, "Analyzing price data"
+        )
 
         # Get the historical price data
         prices = get_prices(
@@ -41,25 +43,37 @@ def technical_analyst_agent(state: AgentState):
         )
 
         if not prices:
-            progress.update_status("technical_analyst_agent", ticker, "Failed: No price data found")
+            progress.update_status(
+                "technical_analyst_agent", ticker, "Failed: No price data found"
+            )
             continue
 
         # Convert prices to a DataFrame
         prices_df = prices_to_df(prices)
 
-        progress.update_status("technical_analyst_agent", ticker, "Calculating trend signals")
+        progress.update_status(
+            "technical_analyst_agent", ticker, "Calculating trend signals"
+        )
         trend_signals = calculate_trend_signals(prices_df)
 
-        progress.update_status("technical_analyst_agent", ticker, "Calculating mean reversion")
+        progress.update_status(
+            "technical_analyst_agent", ticker, "Calculating mean reversion"
+        )
         mean_reversion_signals = calculate_mean_reversion_signals(prices_df)
 
-        progress.update_status("technical_analyst_agent", ticker, "Calculating momentum")
+        progress.update_status(
+            "technical_analyst_agent", ticker, "Calculating momentum"
+        )
         momentum_signals = calculate_momentum_signals(prices_df)
 
-        progress.update_status("technical_analyst_agent", ticker, "Analyzing volatility")
+        progress.update_status(
+            "technical_analyst_agent", ticker, "Analyzing volatility"
+        )
         volatility_signals = calculate_volatility_signals(prices_df)
 
-        progress.update_status("technical_analyst_agent", ticker, "Statistical analysis")
+        progress.update_status(
+            "technical_analyst_agent", ticker, "Statistical analysis"
+        )
         stat_arb_signals = calculate_stat_arb_signals(prices_df)
 
         # Combine all signals using a weighted ensemble approach
@@ -129,8 +143,9 @@ def technical_analyst_agent(state: AgentState):
     # Add the signal to the analyst_signals list
     state["data"]["analyst_signals"]["technical_analyst_agent"] = technical_analysis
 
+    # Ensure messages are combined as lists for Mypy compatibility
     return {
-        "messages": state["messages"] + [message],
+        "messages": list(state["messages"]) + [message],
         "data": data,
     }
 
@@ -191,7 +206,9 @@ def calculate_mean_reversion_signals(prices_df):
     rsi_28 = calculate_rsi(prices_df, 28)
 
     # Mean reversion signals
-    price_vs_bb = (prices_df["close"].iloc[-1] - bb_lower.iloc[-1]) / (bb_upper.iloc[-1] - bb_lower.iloc[-1])
+    price_vs_bb = (prices_df["close"].iloc[-1] - bb_lower.iloc[-1]) / (
+        bb_upper.iloc[-1] - bb_lower.iloc[-1]
+    )
 
     # Combine signals
     if z_score.iloc[-1] < -2 and price_vs_bb < 0.2:
@@ -283,8 +300,8 @@ def calculate_volatility_signals(prices_df):
     atr_ratio = atr / prices_df["close"]
 
     # Generate signal based on volatility regime
-    current_vol_regime = vol_regime.iloc[-1]
-    vol_z = vol_z_score.iloc[-1]
+    current_vol_regime = float(vol_regime.iloc[-1])
+    vol_z = float(vol_z_score.iloc[-1])
 
     if current_vol_regime < 0.8 and vol_z < -1:
         signal = "bullish"  # Low vol regime, potential for expansion
@@ -406,7 +423,9 @@ def calculate_rsi(prices_df: pd.DataFrame, period: int = 14) -> pd.Series:
     return rsi
 
 
-def calculate_bollinger_bands(prices_df: pd.DataFrame, window: int = 20) -> tuple[pd.Series, pd.Series]:
+def calculate_bollinger_bands(
+    prices_df: pd.DataFrame, window: int = 20
+) -> tuple[pd.Series, pd.Series]:
     sma = prices_df["close"].rolling(window).mean()
     std_dev = prices_df["close"].rolling(window).std()
     upper_band = sma + (std_dev * 2)
@@ -425,7 +444,8 @@ def calculate_ema(df: pd.DataFrame, window: int) -> pd.Series:
     Returns:
         pd.Series: EMA values
     """
-    return df["close"].ewm(span=window, adjust=False).mean()
+    close_numeric = pd.to_numeric(df["close"], errors="coerce")
+    return close_numeric.ewm(span=window, adjust=False).mean()
 
 
 def calculate_adx(df: pd.DataFrame, period: int = 14) -> pd.DataFrame:
@@ -445,16 +465,37 @@ def calculate_adx(df: pd.DataFrame, period: int = 14) -> pd.DataFrame:
     df["low_close"] = abs(df["low"] - df["close"].shift())
     df["tr"] = df[["high_low", "high_close", "low_close"]].max(axis=1)
 
-    # Calculate Directional Movement
-    df["up_move"] = df["high"] - df["high"].shift()
-    df["down_move"] = df["low"].shift() - df["low"]
+    # Ensure high and low are numeric before calculations
+    df["high"] = pd.to_numeric(df["high"], errors="coerce")
+    df["low"] = pd.to_numeric(df["low"], errors="coerce")
 
-    df["plus_dm"] = np.where((df["up_move"] > df["down_move"]) & (df["up_move"] > 0), df["up_move"], 0)
-    df["minus_dm"] = np.where((df["down_move"] > df["up_move"]) & (df["down_move"] > 0), df["down_move"], 0)
+    # Calculate Directional Movement
+    up_move = df["high"] - df["high"].shift(1)
+    down_move = df["low"].shift(1) - df["low"]
+
+    # Ensure these are numeric and handle NaNs from shift
+    up_move = pd.to_numeric(up_move, errors="coerce").fillna(0)
+    down_move = pd.to_numeric(down_move, errors="coerce").fillna(0)
+
+    # Calculate +DM and -DM using np.where
+    plus_dm = pd.Series(
+        np.where((up_move > down_move) & (up_move > 0), up_move, 0), index=df.index
+    )
+    minus_dm = pd.Series(
+        np.where((down_move > up_move) & (down_move > 0), down_move, 0), index=df.index
+    )
+
+    # Assign to DataFrame columns
+    df["plus_dm"] = plus_dm
+    df["minus_dm"] = minus_dm
 
     # Calculate ADX
-    df["+di"] = 100 * (df["plus_dm"].ewm(span=period).mean() / df["tr"].ewm(span=period).mean())
-    df["-di"] = 100 * (df["minus_dm"].ewm(span=period).mean() / df["tr"].ewm(span=period).mean())
+    df["+di"] = 100 * (
+        df["plus_dm"].ewm(span=period).mean() / df["tr"].ewm(span=period).mean()
+    )
+    df["-di"] = 100 * (
+        df["minus_dm"].ewm(span=period).mean() / df["tr"].ewm(span=period).mean()
+    )
     df["dx"] = 100 * abs(df["+di"] - df["-di"]) / (df["+di"] + df["-di"])
     df["adx"] = df["dx"].ewm(span=period).mean()
 
@@ -496,14 +537,69 @@ def calculate_hurst_exponent(price_series: pd.Series, max_lag: int = 20) -> floa
     Returns:
         float: Hurst exponent
     """
-    lags = range(2, max_lag)
-    # Add small epsilon to avoid log(0)
-    tau = [max(1e-8, np.sqrt(np.std(np.subtract(price_series[lag:], price_series[:-lag])))) for lag in lags]
+    # Convert to numeric, coercing errors to NaN, and drop non-finite values
+    numeric_series = pd.to_numeric(price_series, errors="coerce")
+    cleaned_series = numeric_series.dropna()
+    cleaned_series = cleaned_series[np.isfinite(cleaned_series)]  # Ensure finite values
+    # Convert to NumPy array early
+    cleaned_array = cleaned_series.to_numpy()
 
-    # Return the Hurst exponent from linear fit
+    # Check if array is long enough after cleaning for the desired lags
+    min_required_length = (
+        max_lag  # Need at least max_lag points for the largest difference
+    )
+    if len(cleaned_array) < min_required_length:
+        return 0.5  # Not enough data points
+
+    lags = range(2, max_lag)
+    tau = []
+    for lag in lags:
+        # Calculate differences using NumPy array slicing
+        diff = np.subtract(cleaned_array[lag:], cleaned_array[:-lag])
+        # Ensure diff is finite and has enough elements for std calculation
+        finite_diff = diff[np.isfinite(diff)]
+        if len(finite_diff) > 1:  # Need at least 2 points for std deviation
+            std_dev = np.std(finite_diff)
+            # Ensure std_dev is non-negative before sqrt
+            tau.append(max(1e-9, np.sqrt(max(0.0, std_dev))))  # Use smaller epsilon
+        else:
+            # If std cannot be calculated (e.g., constant series segment), append epsilon
+            tau.append(1e-9)
+
+    # Ensure tau has the expected length
+    if len(tau) != len(lags):
+        return 0.5  # Calculation failed for some lags
+
+    # Prepare data for polyfit, ensuring logs are taken only of positive values
+    lags_array = np.array(list(lags), dtype=float)
+    tau_array = np.array(tau, dtype=float)
+
+    # Filter out non-positive tau values before taking log
+    positive_mask = tau_array > 1e-10  # Use epsilon to avoid log(0) issues
+    if np.sum(positive_mask) < 2:  # Need at least 2 points for polyfit
+        return 0.5
+
+    valid_lags = lags_array[positive_mask]
+    valid_tau = tau_array[positive_mask]
+
+    # Take log of the filtered float arrays
+    log_lags = np.log(valid_lags)
+    log_tau = np.log(valid_tau)
+
+    # Final check for finite values before polyfit
+    if not np.all(np.isfinite(log_lags)) or not np.all(np.isfinite(log_tau)):
+        return 0.5
+
+    # Inputs to polyfit are float numpy arrays (log_lags, log_tau)
     try:
-        reg = np.polyfit(np.log(lags), np.log(tau), 1)
-        return reg[0]  # Hurst exponent is the slope
-    except (ValueError, RuntimeWarning):
+        # Re-adding type ignore as the error seems related to mypy/numpy limitations
+        reg: np.ndarray = np.polyfit(log_lags, log_tau, 1)  # type: ignore
+        # Check if polyfit returned valid coefficients
+        if reg is None or len(reg) < 1 or not np.isfinite(reg[0]):
+            return 0.5
+        # Explicitly cast the result to float before returning
+        hurst_exponent: float = float(reg[0])
+        return hurst_exponent  # type: ignore
+    except (ValueError, RuntimeWarning, np.linalg.LinAlgError):
         # Return 0.5 (random walk) if calculation fails
         return 0.5

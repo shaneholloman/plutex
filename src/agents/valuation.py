@@ -28,9 +28,11 @@ def valuation_agent(state: AgentState):
 
         # Add safety check for financial metrics
         if not financial_metrics:
-            progress.update_status("valuation_agent", ticker, "Failed: No financial metrics found")
+            progress.update_status(
+                "valuation_agent", ticker, "Failed: No financial metrics found"
+            )
             continue
-        
+
         metrics = financial_metrics[0]
 
         progress.update_status("valuation_agent", ticker, "Gathering line items")
@@ -51,7 +53,9 @@ def valuation_agent(state: AgentState):
 
         # Add safety check for financial line items
         if len(financial_line_items) < 2:
-            progress.update_status("valuation_agent", ticker, "Failed: Insufficient financial line items")
+            progress.update_status(
+                "valuation_agent", ticker, "Failed: Insufficient financial line items"
+            )
             continue
 
         # Pull the current and previous financial line items
@@ -59,16 +63,31 @@ def valuation_agent(state: AgentState):
         previous_financial_line_item = financial_line_items[1]
 
         progress.update_status("valuation_agent", ticker, "Calculating owner earnings")
-        # Calculate working capital change
-        working_capital_change = current_financial_line_item.working_capital - previous_financial_line_item.working_capital
+        # Safely access dynamic attributes using getattr with default 0.0
+        current_wc = getattr(current_financial_line_item, "working_capital", 0.0)
+        previous_wc = getattr(previous_financial_line_item, "working_capital", 0.0)
+        current_ni = getattr(current_financial_line_item, "net_income", 0.0)
+        current_da = getattr(
+            current_financial_line_item, "depreciation_and_amortization", 0.0
+        )
+        current_ce = getattr(current_financial_line_item, "capital_expenditure", 0.0)
+        current_fcf = getattr(current_financial_line_item, "free_cash_flow", 0.0)
+
+        # Calculate working capital change, handle potential None from getattr
+        working_capital_change = (current_wc or 0.0) - (previous_wc or 0.0)
+
+        # Provide default growth rate if None
+        growth_rate = (
+            metrics.earnings_growth if metrics.earnings_growth is not None else 0.0
+        )
 
         # Owner Earnings Valuation (Buffett Method)
         owner_earnings_value = calculate_owner_earnings_value(
-            net_income=current_financial_line_item.net_income,
-            depreciation=current_financial_line_item.depreciation_and_amortization,
-            capex=current_financial_line_item.capital_expenditure,
+            net_income=(current_ni or 0.0),
+            depreciation=(current_da or 0.0),
+            capex=(current_ce or 0.0),
             working_capital_change=working_capital_change,
-            growth_rate=metrics.earnings_growth,
+            growth_rate=growth_rate,
             required_return=0.15,
             margin_of_safety=0.25,
         )
@@ -76,8 +95,8 @@ def valuation_agent(state: AgentState):
         progress.update_status("valuation_agent", ticker, "Calculating DCF value")
         # DCF Valuation
         dcf_value = calculate_intrinsic_value(
-            free_cash_flow=current_financial_line_item.free_cash_flow,
-            growth_rate=metrics.earnings_growth,
+            free_cash_flow=(current_fcf or 0.0),
+            growth_rate=growth_rate,
             discount_rate=0.10,
             terminal_growth_rate=0.03,
             num_years=5,
@@ -87,10 +106,25 @@ def valuation_agent(state: AgentState):
         # Get the market cap
         market_cap = get_market_cap(ticker=ticker, end_date=end_date)
 
-        # Calculate combined valuation gap (average of both methods)
-        dcf_gap = (dcf_value - market_cap) / market_cap
-        owner_earnings_gap = (owner_earnings_value - market_cap) / market_cap
-        valuation_gap = (dcf_gap + owner_earnings_gap) / 2
+        # Check if market_cap is valid before calculating gaps
+        if market_cap is None or market_cap <= 0:
+            progress.update_status(
+                "valuation_agent", ticker, "Failed: Invalid market cap for valuation"
+            )
+            valuation_gap = 0.0
+            dcf_gap = 0.0
+            owner_earnings_gap = 0.0
+            dcf_details = (
+                f"Intrinsic Value: ${dcf_value:,.2f}, Market Cap: N/A, Gap: N/A"
+            )
+            owner_earnings_details = f"Owner Earnings Value: ${owner_earnings_value:,.2f}, Market Cap: N/A, Gap: N/A"
+        else:
+            # Calculate combined valuation gap (average of both methods)
+            dcf_gap = (dcf_value - market_cap) / market_cap
+            owner_earnings_gap = (owner_earnings_value - market_cap) / market_cap
+            valuation_gap = (dcf_gap + owner_earnings_gap) / 2
+            dcf_details = f"Intrinsic Value: ${dcf_value:,.2f}, Market Cap: ${market_cap:,.2f}, Gap: {dcf_gap:.1%}"
+            owner_earnings_details = f"Owner Earnings Value: ${owner_earnings_value:,.2f}, Market Cap: ${market_cap:,.2f}, Gap: {owner_earnings_gap:.1%}"
 
         if valuation_gap > 0.15:  # More than 15% undervalued
             signal = "bullish"
@@ -102,16 +136,32 @@ def valuation_agent(state: AgentState):
         # Create the reasoning
         reasoning = {}
         reasoning["dcf_analysis"] = {
-            "signal": ("bullish" if dcf_gap > 0.15 else "bearish" if dcf_gap < -0.15 else "neutral"),
-            "details": f"Intrinsic Value: ${dcf_value:,.2f}, Market Cap: ${market_cap:,.2f}, Gap: {dcf_gap:.1%}",
+            "signal": (
+                "bullish"
+                if dcf_gap > 0.15
+                else "bearish"
+                if dcf_gap < -0.15
+                else "neutral"
+            ),
+            "details": dcf_details,
         }
 
         reasoning["owner_earnings_analysis"] = {
-            "signal": ("bullish" if owner_earnings_gap > 0.15 else "bearish" if owner_earnings_gap < -0.15 else "neutral"),
-            "details": f"Owner Earnings Value: ${owner_earnings_value:,.2f}, Market Cap: ${market_cap:,.2f}, Gap: {owner_earnings_gap:.1%}",
+            "signal": (
+                "bullish"
+                if owner_earnings_gap > 0.15
+                else "bearish"
+                if owner_earnings_gap < -0.15
+                else "neutral"
+            ),
+            "details": owner_earnings_details,
         }
 
-        confidence = round(abs(valuation_gap), 2) * 100
+        confidence = (
+            round(abs(valuation_gap), 2) * 100
+            if market_cap is not None and market_cap > 0
+            else 0.0
+        )
         valuation_analysis[ticker] = {
             "signal": signal,
             "confidence": confidence,
@@ -169,7 +219,12 @@ def calculate_owner_earnings_value(
     Returns:
         float: Intrinsic value with margin of safety
     """
-    if not all([isinstance(x, (int, float)) for x in [net_income, depreciation, capex, working_capital_change]]):
+    if not all(
+        [
+            isinstance(x, (int, float))
+            for x in [net_income, depreciation, capex, working_capital_change]
+        ]
+    ):
         return 0
 
     # Calculate initial owner earnings
@@ -187,7 +242,9 @@ def calculate_owner_earnings_value(
 
     # Calculate terminal value (using perpetuity growth formula)
     terminal_growth = min(growth_rate, 0.03)  # Cap terminal growth at 3%
-    terminal_value = (future_values[-1] * (1 + terminal_growth)) / (required_return - terminal_growth)
+    terminal_value = (future_values[-1] * (1 + terminal_growth)) / (
+        required_return - terminal_growth
+    )
     terminal_value_discounted = terminal_value / (1 + required_return) ** num_years
 
     # Sum all values and apply margin of safety
@@ -218,7 +275,11 @@ def calculate_intrinsic_value(
         present_values.append(present_value)
 
     # Calculate the terminal value
-    terminal_value = cash_flows[-1] * (1 + terminal_growth_rate) / (discount_rate - terminal_growth_rate)
+    terminal_value = (
+        cash_flows[-1]
+        * (1 + terminal_growth_rate)
+        / (discount_rate - terminal_growth_rate)
+    )
     terminal_present_value = terminal_value / (1 + discount_rate) ** num_years
 
     # Sum up the present values and terminal value

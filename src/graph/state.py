@@ -1,5 +1,5 @@
 from typing_extensions import Annotated, Sequence, TypedDict
-
+from typing import Any
 import operator
 from langchain_core.messages import BaseMessage
 
@@ -7,15 +7,15 @@ from langchain_core.messages import BaseMessage
 import json
 
 
-def merge_dicts(a: dict[str, any], b: dict[str, any]) -> dict[str, any]:
+def merge_dicts(a: dict[str, Any], b: dict[str, Any]) -> dict[str, Any]:
     return {**a, **b}
 
 
 # Define agent state
 class AgentState(TypedDict):
     messages: Annotated[Sequence[BaseMessage], operator.add]
-    data: Annotated[dict[str, any], merge_dicts]
-    metadata: Annotated[dict[str, any], merge_dicts]
+    data: Annotated[dict[str, Any], merge_dicts]
+    metadata: Annotated[dict[str, Any], merge_dicts]
 
 
 def show_agent_reasoning(output, agent_name):

@@ -4,7 +4,6 @@ from rich.table import Table
 from rich.style import Style
 from rich.text import Text
 from typing import Dict, Optional
-from datetime import datetime
 
 console = Console()
 
@@ -12,25 +11,27 @@ console = Console()
 class AgentProgress:
     """Manages progress tracking for multiple agents."""
 
-    def __init__(self):
-        self.agent_status: Dict[str, Dict[str, str]] = {}
+    def __init__(self) -> None:
+        self.agent_status: Dict[str, Dict[str, Optional[str]]] = {}
         self.table = Table(show_header=False, box=None, padding=(0, 1))
         self.live = Live(self.table, console=console, refresh_per_second=4)
         self.started = False
 
-    def start(self):
+    def start(self) -> None:
         """Start the progress display."""
         if not self.started:
             self.live.start()
             self.started = True
 
-    def stop(self):
+    def stop(self) -> None:
         """Stop the progress display."""
         if self.started:
             self.live.stop()
             self.started = False
 
-    def update_status(self, agent_name: str, ticker: Optional[str] = None, status: str = ""):
+    def update_status(
+        self, agent_name: str, ticker: Optional[str] = None, status: str = ""
+    ) -> None:
         """Update the status of an agent."""
         if agent_name not in self.agent_status:
             self.agent_status[agent_name] = {"status": "", "ticker": None}
@@ -42,7 +43,7 @@ class AgentProgress:
 
         self._refresh_display()
 
-    def _refresh_display(self):
+    def _refresh_display(self) -> None:
         """Refresh the progress display."""
         self.table.columns.clear()
         self.table.add_column(width=100)
@@ -62,10 +63,13 @@ class AgentProgress:
             ticker = info["ticker"]
 
             # Create the status text with appropriate styling
-            if status.lower() == "done":
+            # Handle None status by defaulting to empty string for comparison and display
+            current_status = status if status is not None else ""
+
+            if current_status.lower() == "done":
                 style = Style(color="green", bold=True)
                 symbol = "✓"
-            elif status.lower() == "error":
+            elif current_status.lower() == "error":
                 style = Style(color="red", bold=True)
                 symbol = "✗"
             else:
@@ -79,7 +83,7 @@ class AgentProgress:
 
             if ticker:
                 status_text.append(f"[{ticker}] ", style=Style(color="cyan"))
-            status_text.append(status, style=style)
+            status_text.append(current_status, style=style)
 
             self.table.add_row(status_text)
 
