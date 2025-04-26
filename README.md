@@ -1,8 +1,5 @@
 # Plutus
 
-> [!CAUTION]
-> Project is in REALLY poor state. Python code needs to be cleaned up and modernized. But, it works.
-
 This is a proof of concept for an AI-powered trading system. The goal of this project is to explore the use of AI to make trading decisions. This project is for **educational** purposes only and is not intended for real trading or investment.
 
 This system employs several agents working together:
